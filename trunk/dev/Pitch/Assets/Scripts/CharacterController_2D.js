@@ -3,18 +3,22 @@ public var f_speed:float = 5.0; //speed of pitch
 public var loopSprites:SpriteManager[]; //controls the update of the sprite animation texture
 public var jumpSprite:JumpSpriteManager;
 public var layerMask:LayerMask;
+public var openDoorTexture:Texture2D;
+public var doorCloseTexture:Texture2D;
+
 
 //Private Vars - Unavailable in the inspector, hidden to other classes
 private var in_direction:int;
 private var b_isJumping:boolean;
-
+private var b_hasKey:boolean;
 private var f_height:float; //Height of the character
 private var f_lastY:float; //Last Y position of the character
 
 //Starts as soon as the game begins
 public function Start():void {
 	in_direction = 1;
-	
+	//No key at start
+	b_hasKey = false;
 	//Init the sprite manager
 	for(var i:int = 0;i < loopSprites.length;i++){
 		loopSprites[i].init();
@@ -95,6 +99,41 @@ f_lastY = Mathf.Floor(transform.position.y);
 }
 
 
+
+public function OnTriggerEnter (hit : Collider) : IEnumerator {
+	if (hit.collider.tag == "Key") {
+		if (!b_hasKey) {
+			//We hit our Key
+			//audio.volume = 1.0;
+			//audio.PlayOneShot(getKeySound);
+			b_hasKey = true;
+			Destroy (hit.gameObject);
+		}
+	}
+	
+	if (hit.collider.tag == "Door") {
+		if (b_hasKey) {
+			//audio.volume = 1.0;
+			//audio.PlayOneShot(doorOpenSound);
+			//If we had Key and hit door the door will open
+			hit.gameObject.renderer.material.mainTexture = openDoorTexture;
+			//wait for 1 second and destroy our character
+			yield WaitForSeconds(1);
+			Destroy (gameObject);
+			//We close the door
+			hit.gameObject.renderer.material.mainTexture = doorCloseTexture;
+			//Show Restart Button
+			//restartButton.enabled = true;
+		}
+	}
+}
+
+
+
+
+
+
+//DEBUGGER
 public function OnDrawGizmos() : void {
   mesh = GetComponent(MeshFilter).sharedMesh;
   f_height = mesh.bounds.size.y* transform.localScale.y;
@@ -106,6 +145,13 @@ public function OnDrawGizmos() : void {
   Gizmos.DrawRay(v3_left, transform.TransformDirection (-Vector3.up) * (f_height * 0.5));
 }
 
+
+
+
+
+
+
+///SPRITE MANAGER CLASS
 
 class SpriteManager {
 	public var spriteTexture:Texture2D;
